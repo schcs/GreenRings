@@ -112,15 +112,16 @@ ResidualField := function( I )
     until IsOrderOfFieldElement( el, #F0-1 );
                               
     // now calculate a "nice" copy of F0                   
-    mpol := MinimalPolynomial( el );
-    F := SplittingField( mpol );
-    
+    mpol := MinimalPolynomial( el ); 
+    F := ext< GF( p ) | mpol >; 
+    assert MinimalPolynomial( F.1 ) eq mpol;
+        
     // elQ is the element of Q that corresponds to el in F0
     elQ := &+[ (Integers()!vec[i])*gensQ[i] : i in [1..#gensQ]];
                    
     // we can list the elements of Q                   
     listQ := [ Q!0 ] cat [ elQ^i : i in [0..#F-2]];
-                   
+    
     // fun is a function that will define a bijection from P -> F               
     fun := function( x )
         
@@ -181,15 +182,14 @@ IdealOfGreenRingAsPolynomialRing := function( G )
     
     B := GroebnerBasis( I );
     J := [];
-        
     // calculate the Jacobian matrix over Z[x_1,...,x_k,xi]
-    for i in [1..#B] do
-        for j in [1..deg] do
-            Append( ~J, Derivative( B[i], j ));
+    for i in [1..#gensI-1] do
+        for j in [1..deg-1] do
+            Append( ~J, Derivative( gensI[i], j ));
         end for;
     end for;
     
-    J := Matrix( #B, deg, J );
+    J := Matrix( #gensI-1, deg-1, J );
                  
     // we store some additional info in the record components of I             
                  
@@ -444,14 +444,14 @@ JacobianOverResidualField := function( K )
     
     if assigned K`jacobian then
         return K`jacobian;
-    end if; 
+    end if;  
     
     F, g, mpf := ResidualField( K );
     I := K`idealOfGreenRing;
-    P := I`polynomialRing;
-    B := GroebnerBasis( I );
-    J := I`generalJacobian;
-    Jp := Matrix( F, #B, Rank( P ), [ x@g@mpf : x in Eltseq( J )] );
+    P := I`polynomialRing; 
+    J := I`generalJacobian;  
+    Jp := Matrix( F, NumberOfRows( J ), NumberOfColumns( J ), 
+    [ x@mpf : x in Eltseq( J )] );
     K`jacobian := Jp;
     
     return Jp;
